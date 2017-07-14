@@ -1,0 +1,64 @@
+{
+  "name": "rivage",
+  "productName": "Rivage",
+  "version": "0.0.1",
+  "description": "A tag file explorer",
+  "license": "MIT",
+  "repository": "https://github.com/frinyvonnick/rivage",
+  "homepage": "https://github.com/frinyvonnick/rivage",
+  "bugs": "frin.yvonnick@gmail.com",
+  "engines": {},
+  "contributors": [],
+  "author": {
+    "name": "FRIN Yvonnick",
+    "email": "frin.yvonnick@gmail.com",
+    "url": "https://github.com/frinyvonnick"
+  },
+  "_moduleAliases": {
+    "src": "./src",
+    "assets": "./src/assets",
+    "windows": "./src/windows",
+    "main-process": "./src/main-process",
+    "renderer-process": "./src/renderer-process"
+  },
+  "build": {
+    "publish": {
+      "GithubOptions": {}
+    }
+  },
+  "scripts": {
+    "start": "electron --harmony src",
+    "dev": "cross-env NODE_ENV=development yarn watch-app-files",
+    "lint": "standard",
+    "pack": "build --dir -mwl --x64",
+    "dist": "build -mwl --x64",
+    "watch-app-files": "nodemon -e js --watch src/main-process --watch src/index.js --exec 'npm start'",
+    "watch-components": "nodemon -e html --watch src/components --exec 'npm run build-components'",
+    "build-components": "svelte compile -f umd -i ./src/components/ -o ./src/components/"
+  },
+  "keywords": [
+    "tags",
+    "electron"
+  ],
+  "dependencies": {
+    "bluebird": "^3.5.0",
+    "chokidar": "^1.7.0",
+    "concurrently": "^3.5.0",
+    "electron-debug": "^1.2.0",
+    "electron-json-storage": "^3.0.6",
+    "electron-reload": "https://github.com/frinyvonnick/electron-reload",
+    "electron-updater": "^2.7.1",
+    "electron-window": "^0.8.1",
+    "glob": "^7.1.2",
+    "module-alias": "^2.0.0",
+    "svelte-cli": "^1.3.7"
+  },
+  "devDependencies": {
+    "cross-env": "^5.0.1",
+    "devtron": "^1.1.0",
+    "electron": "^1.6.11",
+    "electron-builder": "^19.16.0",
+    "nodemon": "^1.11.0",
+    "standard": "^10.0.2"
+  }
+}
