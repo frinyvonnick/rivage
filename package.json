@@ -29,7 +29,7 @@
   "scripts": {
     "start": "electron --harmony src",
     "dev": "cross-env NODE_ENV=development yarn watch-app-files",
-    "lint": "standard",
+    "lint": "eslint src",
     "pack": "build --dir -mwl --x64",
     "dist": "build -mwl --x64",
     "watch-app-files": "nodemon -e js --watch src/main-process --watch src/index.js --exec 'npm start'",
@@ -48,6 +48,7 @@
     "electron-reload": "https://github.com/frinyvonnick/electron-reload",
     "electron-updater": "^2.7.1",
     "electron-window": "^0.8.1",
+    "eslint": "^4.2.0",
     "glob": "^7.1.2",
     "module-alias": "^2.0.0",
     "svelte-cli": "^1.3.7"
@@ -57,7 +58,6 @@
     "devtron": "^1.1.0",
     "electron": "^1.6.11",
     "electron-builder": "^19.16.0",
-    "nodemon": "^1.11.0",
-    "standard": "^10.0.2"
+    "nodemon": "^1.11.0"
   }
 }
