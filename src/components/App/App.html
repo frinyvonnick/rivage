@@ -1,1 +1,23 @@
-<div>Hello {{ name }}!</div>
+<div>
+  <List files={{files}} />
+</div>
+
+<script>
+  import List from './List'
+
+  export default {
+    data () {
+      return {
+        args: {
+          files: [],
+        }
+      };
+    },
+    computed: {
+      files: args => args.files,
+    },
+    components: {
+      List,
+    },
+  }
+</script>

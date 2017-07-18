@@ -1,57 +1,82 @@
 (function ( global, factory ) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./List')) :
-	typeof define === 'function' && define.amd ? define([''], factory) :
-	(global.App = factory(List));
-}(this, (function ( List ) { 'use strict';
-
-List = ( List && List.__esModule ) ? List['default'] : List;
-
-function recompute ( state, newState, oldState, isInitial ) {
-	if ( isInitial || ( 'args' in newState && differs( state.args, oldState.args ) ) ) {
-		state.files = newState.files = template.computed.files( state.args );
-	}
-}
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.File = factory());
+}(this, (function () { 'use strict';
 
 var template = (function () {
   return {
     data () {
       return {
-        args: {
-          files: [],
+        thumbnail: '',
+        name: '',
+        path: '',
+        isDirectory: false,
+      }
+    },
+    methods: {
+      click: function () {
+        if (this.get('isDirectory')) {
+          this.fire('browse', this.get('path'))
         }
-      };
-    },
-    computed: {
-      files: args => args.files,
-    },
+      }
+    }
   }
 }());
 
-function create_main_fragment ( state, component ) {
-	var div;
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-1285362271-style';
+	style.textContent = "\n  [svelte-1285362271].file, [svelte-1285362271] .file {\n    padding: 10px;\n    width: 100px;\n    min-width: 100px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  [svelte-1285362271].file p, [svelte-1285362271] .file p {\n    margin-bottom: 0;\n    margin-top: 5px;\n    width: 100%;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n";
+	appendNode( style, document.head );
+}
 
-	var list = new List({
-		_root: component._root,
-		data: { files: state.files }
-	});
+function create_main_fragment ( state, component ) {
+	var div, img, img_src_value, text, p, p_title_value, text_1_value, text_1;
+
+	function click_handler ( event ) {
+		component.click();
+	}
 
 	return {
 		create: function () {
 			div = createElement( 'div' );
-			list._fragment.create();
+			img = createElement( 'img' );
+			text = createText( "\n  " );
+			p = createElement( 'p' );
+			text_1 = createText( text_1_value = state.name );
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			setAttribute( div, 'svelte-1285362271', '' );
+			div.className = "file";
+			img.src = img_src_value = state.thumbnail;
+			img.height = "80";
+			addListener( img, 'click', click_handler );
+			p.title = p_title_value = state.name;
 		},
 
 		mount: function ( target, anchor ) {
 			insertNode( div, target, anchor );
-			list._fragment.mount( div, null );
+			appendNode( img, div );
+			appendNode( text, div );
+			appendNode( p, div );
+			appendNode( text_1, p );
 		},
 
 		update: function ( changed, state ) {
-			var list_changes = {};
+			if ( img_src_value !== ( img_src_value = state.thumbnail ) ) {
+				img.src = img_src_value;
+			}
 
-			if ( 'files' in changed ) list_changes.files = state.files;
+			if ( p_title_value !== ( p_title_value = state.name ) ) {
+				p.title = p_title_value;
+			}
 
-			if ( Object.keys( list_changes ).length ) list.set( list_changes );
+			if ( text_1_value !== ( text_1_value = state.name ) ) {
+				text_1.data = text_1_value;
+			}
 		},
 
 		unmount: function () {
@@ -59,15 +84,14 @@ function create_main_fragment ( state, component ) {
 		},
 
 		destroy: function () {
-			list.destroy( false );
+			removeListener( img, 'click', click_handler );
 		}
 	};
 }
 
-function App ( options ) {
+function File ( options ) {
 	options = options || {};
 	this._state = assign( template.data(), options.data );
-	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -80,7 +104,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._torndown = false;
-	this._oncreate = [];
+	if ( !document.getElementById( 'svelte-1285362271-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -88,11 +112,9 @@ function App ( options ) {
 		this._fragment.create();
 		this._fragment.mount( options.target, null );
 	}
-
-	callAll(this._oncreate);
 }
 
-assign( App.prototype, {
+assign( File.prototype, template.methods, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -100,17 +122,15 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+File.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
-	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
-	callAll(this._oncreate);
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+File.prototype.teardown = File.prototype.destroy = function destroy ( detach ) {
 	this.fire( 'destroy' );
 
 	if ( detach !== false ) this._fragment.unmount();
@@ -121,12 +141,24 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._torndown = true;
 };
 
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
-}
-
 function createElement(name) {
 	return document.createElement(name);
+}
+
+function appendNode(node, target) {
+	target.appendChild(node);
+}
+
+function createText(data) {
+	return document.createTextNode(data);
+}
+
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
 }
 
 function insertNode(node, target, anchor) {
@@ -135,6 +167,10 @@ function insertNode(node, target, anchor) {
 
 function detachNode(node) {
 	node.parentNode.removeChild(node);
+}
+
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
 }
 
 function assign(target) {
@@ -148,10 +184,6 @@ function assign(target) {
 	}
 
 	return target;
-}
-
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {
@@ -231,6 +263,14 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
-return App;
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
+}
+
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
+
+return File;
 
 })));

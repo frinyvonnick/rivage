@@ -15,11 +15,16 @@
     "url": "https://github.com/frinyvonnick"
   },
   "_moduleAliases": {
+    "package.json": "./package.json",
     "src": "./src",
     "assets": "./src/assets",
     "windows": "./src/windows",
     "main-process": "./src/main-process",
+    "utils": "./src/utils",
     "renderer-process": "./src/renderer-process"
+  },
+  "options": {
+    "initialPath": "/"
   },
   "build": {
     "publish": {
@@ -32,7 +37,7 @@
     "lint": "eslint src",
     "pack": "build --dir -mwl --x64",
     "dist": "build -mwl --x64",
-    "watch-app-files": "nodemon -e js --watch src/main-process --watch src/index.js --exec 'npm start'",
+    "watch-app-files": "nodemon -e js --watch src/main-process --watch src/utils --watch src/index.js --exec 'npm start'",
     "watch-components": "nodemon -e html --watch src/components --exec 'npm run build-components'",
     "build-components": "svelte compile -f umd -i ./src/components/ -o ./src/components/"
   },

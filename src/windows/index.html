@@ -2,19 +2,36 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Electron boilerplate</title>
+		<title>Rivage</title>
 		<link rel="stylesheet" href="../assets/css/index.css">
 	</head>
 	<body>
 	</body>
 	<script>
 		const App = require('../components/App').default
+		const { ipcRenderer } = require('electron')
 
-		new App({
+		const app = new App({
       target: document.querySelector('body'),
       data: {
         args: __args__
       }
     })
+
+		ipcRenderer.on('files-sent', (e, files) => {
+			const data = Object.assign(
+				{},
+				{
+					args: __args__,
+				},
+				{
+					args: {
+						files,
+					},
+				}
+			)
+			app.set(data)
+		})
+
 	</script>
 </html>
