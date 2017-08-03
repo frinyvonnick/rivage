@@ -1,1 +1,3 @@
-exports.default = require('./App.js')
+const connect = require('utils/connect.js')
+
+module.exports = connect()(require('./App.js'))

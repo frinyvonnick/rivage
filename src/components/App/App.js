@@ -6,23 +6,12 @@
 
 List = ( List && List.__esModule ) ? List['default'] : List;
 
-function recompute ( state, newState, oldState, isInitial ) {
-	if ( isInitial || ( 'args' in newState && differs( state.args, oldState.args ) ) ) {
-		state.files = newState.files = template.computed.files( state.args );
-	}
-}
-
 var template = (function () {
   return {
     data () {
       return {
-        args: {
-          files: [],
-        }
+        files: []
       };
-    },
-    computed: {
-      files: args => args.files,
     },
   }
 }());
@@ -67,7 +56,6 @@ function create_main_fragment ( state, component ) {
 function App ( options ) {
 	options = options || {};
 	this._state = assign( template.data(), options.data );
-	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -103,7 +91,6 @@ assign( App.prototype, {
 App.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
-	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
@@ -120,10 +107,6 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._state = {};
 	this._torndown = true;
 };
-
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
-}
 
 function createElement(name) {
 	return document.createElement(name);
@@ -229,6 +212,10 @@ function dispatchObservers(component, group, newState, oldState) {
 			}
 		}
 	}
+}
+
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
 return App;

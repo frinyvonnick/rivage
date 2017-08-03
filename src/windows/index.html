@@ -8,29 +8,29 @@
 	<body>
 	</body>
 	<script>
-		const App = require('../components/App').default
+		// Let use path aliases like src/main-process/windows instead of ../main-process/windows
+		require('module-alias/register')
+		const App = require('../components/App')
 		const { ipcRenderer } = require('electron')
+		const { getStore } = require('state/store')
+		const { setAddress } = require('state/actions')
+
+		const store = getStore()
+		let state = store.getState()
 
 		const app = new App({
       target: document.querySelector('body'),
-      data: {
-        args: __args__
-      }
+      data: state
     })
 
-		ipcRenderer.on('files-sent', (e, files) => {
-			const data = Object.assign(
-				{},
-				{
-					args: __args__,
-				},
-				{
-					args: {
-						files,
-					},
-				}
-			)
-			app.set(data)
+		store.subscribe(() => {
+			const nextState = store.getState()
+
+			if (state.files !== nextState.files) {
+				app.set({ files: nextState.files })
+			}
+
+			state = nextState
 		})
 
 	</script>

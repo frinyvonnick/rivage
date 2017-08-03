@@ -2,13 +2,12 @@
 require('module-alias/register')
 
 const { app } = require('electron')
-const glob = require('glob')
-const path = require('path')
 const { execSync } = require('child_process')
 
 const { createMainWindow } = require('main-process/windows')
 const { getFiles } = require('utils/fs')
-const { options: { initialPath } } = require('package.json')
+const { getStore } = require('state/store')
+const { setFiles } = require('state/actions')
 
 // Install Devtron in development and enable hot-reload for svelte components
 if (process.env.NODE_ENV === 'development') {
@@ -16,36 +15,45 @@ if (process.env.NODE_ENV === 'development') {
   require('electron-reload')('./**/*.html', { callback: () => { execSync('yarn build-components') } })
 }
 
+// Init redux store
+const store = getStore()
+let state = store.getState()
+store.subscribe(() => {
+  const nextState = store.getState()
+
+  if (state.address !== nextState.address) {
+    getFiles(nextState.address).then(files => {
+      store.dispatch(setFiles(files))
+    })
+  }
+
+  state = nextState
+})
+
+getFiles(state.address).then(files => {
+  store.dispatch(setFiles(files))
+})
+
 // Prevent window being garbage collected
 let mainWindow
 
-const openMainWindow = async () => {
-  const files = await getFiles(initialPath)
+const openMainWindow = () => {
+  const { files } = state
   mainWindow = createMainWindow({}, { files })
 }
 
 app.on('window-all-closed', () => {
-  if (process.platform !== 'darwin')
+  if (process.platform !== 'darwin') {
     app.quit()
-
+  }
 })
 
 app.on('activate', () => {
-  if (!mainWindow)
+  if (!mainWindow) {
     openMainWindow()
-
+  }
 })
 
 app.on('ready', () => {
   openMainWindow()
 })
-
-const loadDependencies = async () => {
-  // Require each JS file in the main-process/listeners dir
-  const dependencies = await glob.sync(path.join(__dirname, 'main-process/listeners/**/*.js'))
-  dependencies.forEach((file) => {
-    require(file)
-  })
-}
-
-loadDependencies()

@@ -19,9 +19,9 @@ exports.getFiles = async (pPath) => {
       isDirectory: stats.isDirectory(),
     })
 
-    if (stats.isDirectory())
+    if (stats.isDirectory()) {
       info = Object.assign({}, info, { thumbnail: path.join(__dirname, '..', 'assets/images/file-icons/folder.svg') })
-    else {
+    } else {
       const extension = f.split('.').pop()
       const iconPath = path.join(__dirname, '..', `assets/images/file-icons/${extension}.svg`)
       try {
