@@ -7,7 +7,7 @@ const shallowEqualObjects = require('shallow-equal/objects')
 const { getStore } = require('state/store')
 
 // eslint-disable-next-line no-empty-function
-module.exports = (mapStateToData = noop, mapDispatchToData = noop) => Component => {
+exports.connect = (mapStateToData = noop, mapDispatchToData = noop) => Component => {
   const store = getStore()
 
   const getNextData = (state, data, dispatch) => {

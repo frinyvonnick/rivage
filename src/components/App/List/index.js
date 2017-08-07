@@ -1,4 +1,4 @@
-const connect = require('utils/connect')
+const { connect } = require('utils/connect')
 
 const mapStateToData = ({ files }) => ({
   files,
