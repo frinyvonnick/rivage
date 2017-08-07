@@ -10,28 +10,20 @@
 	<script>
 		// Let use path aliases like src/main-process/windows instead of ../main-process/windows
 		require('module-alias/register')
-		const App = require('../components/App')
-		const { ipcRenderer } = require('electron')
-		const { getStore } = require('state/store')
-		const { setAddress } = require('state/actions')
+		const { createStore } = require('state/store')
 
-		const store = getStore()
-		let state = store.getState()
+		const store = createStore([])
+
+		store.subscribe(() => {
+			console.log('state', store.getState())
+		})
+
+		// Have to require App only after store got created
+		const App = require('../components/App')
 
 		const app = new App({
       target: document.querySelector('body'),
-      data: state
     })
-
-		store.subscribe(() => {
-			const nextState = store.getState()
-
-			if (state.files !== nextState.files) {
-				app.set({ files: nextState.files })
-			}
-
-			state = nextState
-		})
 
 	</script>
 </html>

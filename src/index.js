@@ -1,13 +1,20 @@
 // Let use path aliases like src/main-process/windows instead of ../main-process/windows
 require('module-alias/register')
 
-const { app } = require('electron')
+const {
+  app,
+  shell,
+} = require('electron')
 const { execSync } = require('child_process')
 
 const { createMainWindow } = require('main-process/windows')
 const { getFiles } = require('utils/fs')
-const { getStore } = require('state/store')
-const { setFiles } = require('state/actions')
+const { createStore } = require('state/store')
+const {
+  setFiles,
+  SET_ADDRESS,
+  OPEN_ITEM,
+} = require('state/actions')
 
 // Install Devtron in development and enable hot-reload for svelte components
 if (process.env.NODE_ENV === 'development') {
@@ -15,20 +22,32 @@ if (process.env.NODE_ENV === 'development') {
   require('electron-reload')('./**/*.html', { callback: () => { execSync('yarn build-components') } })
 }
 
-// Init redux store
-const store = getStore()
-let state = store.getState()
-store.subscribe(() => {
+const globalMiddleware = store => next => action => {
+
+  const result = next(action)
   const nextState = store.getState()
 
-  if (state.address !== nextState.address) {
+  switch (action.type) {
+  case SET_ADDRESS: {
     getFiles(nextState.address).then(files => {
       store.dispatch(setFiles(files))
     })
+    break
+  }
+  case OPEN_ITEM: {
+    shell.openItem(action.fullPath)
+    break
+  }
+  default:
+
   }
 
-  state = nextState
-})
+  return result
+}
+
+// Init redux store
+const store = createStore([globalMiddleware])
+const state = store.getState()
 
 getFiles(state.address).then(files => {
   store.dispatch(setFiles(files))

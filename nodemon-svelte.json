@@ -11,5 +11,5 @@
   "watch": [
     "src/components"
   ],
-  "ext": "html"
+  "ext": "html js"
 }

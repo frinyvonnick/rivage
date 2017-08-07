@@ -8,6 +8,8 @@
 </div>
 
 <script>
+  const { noop } = require('lodash')
+
   export default {
     data () {
       return {
@@ -15,12 +17,18 @@
         name: '',
         path: '',
         isDirectory: false,
+        setAddress: noop,
+        openItem: noop,
       }
     },
     methods: {
       click: function () {
-        if (this.get('isDirectory')) {
-          this.fire('browse', this.get('path'))
+        const { isDirectory, setAddress, openItem, path } = this._state
+
+        if (isDirectory) {
+          setAddress()
+        } else {
+          openItem()
         }
       }
     }

@@ -6,22 +6,11 @@
 
 List = ( List && List.__esModule ) ? List['default'] : List;
 
-var template = (function () {
-  return {
-    data () {
-      return {
-        files: []
-      };
-    },
-  }
-}());
-
 function create_main_fragment ( state, component ) {
 	var div;
 
 	var list = new List({
-		_root: component._root,
-		data: { files: state.files }
+		_root: component._root
 	});
 
 	return {
@@ -33,14 +22,6 @@ function create_main_fragment ( state, component ) {
 		mount: function ( target, anchor ) {
 			insertNode( div, target, anchor );
 			list._fragment.mount( div, null );
-		},
-
-		update: function ( changed, state ) {
-			var list_changes = {};
-
-			if ( 'files' in changed ) list_changes.files = state.files;
-
-			if ( Object.keys( list_changes ).length ) list.set( list_changes );
 		},
 
 		unmount: function () {
@@ -55,7 +36,7 @@ function create_main_fragment ( state, component ) {
 
 function App ( options ) {
 	options = options || {};
-	this._state = assign( template.data(), options.data );
+	this._state = options.data || {};
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -92,7 +73,6 @@ App.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
-	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 	callAll(this._oncreate);
 };
@@ -120,6 +100,10 @@ function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
+}
+
 function assign(target) {
 	var k,
 		source,
@@ -131,10 +115,6 @@ function assign(target) {
 	}
 
 	return target;
-}
-
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {

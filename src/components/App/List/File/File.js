@@ -5,6 +5,8 @@
 }(this, (function () { 'use strict';
 
 var template = (function () {
+  const { noop } = require('lodash')
+
   return {
     data () {
       return {
@@ -12,12 +14,18 @@ var template = (function () {
         name: '',
         path: '',
         isDirectory: false,
+        setAddress: noop,
+        openItem: noop,
       }
     },
     methods: {
       click: function () {
-        if (this.get('isDirectory')) {
-          this.fire('browse', this.get('path'))
+        const { isDirectory, setAddress, openItem, path } = this._state
+
+        if (isDirectory) {
+          setAddress()
+        } else {
+          openItem()
         }
       }
     }
@@ -26,8 +34,8 @@ var template = (function () {
 
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-1285362271-style';
-	style.textContent = "\n  [svelte-1285362271].file, [svelte-1285362271] .file {\n    padding: 10px;\n    width: 100px;\n    min-width: 100px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  [svelte-1285362271].file p, [svelte-1285362271] .file p {\n    margin-bottom: 0;\n    margin-top: 5px;\n    width: 100%;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n";
+	style.id = 'svelte-3656429022-style';
+	style.textContent = "\n  [svelte-3656429022].file, [svelte-3656429022] .file {\n    padding: 10px;\n    width: 100px;\n    min-width: 100px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  [svelte-3656429022].file p, [svelte-3656429022] .file p {\n    margin-bottom: 0;\n    margin-top: 5px;\n    width: 100%;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n";
 	appendNode( style, document.head );
 }
 
@@ -49,7 +57,7 @@ function create_main_fragment ( state, component ) {
 		},
 
 		hydrate: function ( nodes ) {
-			setAttribute( div, 'svelte-1285362271', '' );
+			setAttribute( div, 'svelte-3656429022', '' );
 			div.className = "file";
 			img.src = img_src_value = state.thumbnail;
 			img.height = "80";
@@ -104,7 +112,7 @@ function File ( options ) {
 	this._yield = options._yield;
 
 	this._torndown = false;
-	if ( !document.getElementById( 'svelte-1285362271-style' ) ) add_css();
+	if ( !document.getElementById( 'svelte-3656429022-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 

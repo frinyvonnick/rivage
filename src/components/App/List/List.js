@@ -7,17 +7,10 @@
 File = ( File && File.__esModule ) ? File['default'] : File;
 
 var template = (function () {
-  const { ipcRenderer } = require('electron')
-
   return {
     data () {
       return {
         files: [],
-      }
-    },
-    methods: {
-      browse: function (path) {
-        ipcRenderer.send('change-path', path)
       }
     }
   }
@@ -25,8 +18,8 @@ var template = (function () {
 
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-3794444557-style';
-	style.textContent = "\n  [svelte-3794444557].list, [svelte-3794444557] .list {\n    width: 100%;\n    display: flex;\n    flex-wrap: wrap;\n  }\n";
+	style.id = 'svelte-854233428-style';
+	style.textContent = "\n  [svelte-854233428].list, [svelte-854233428] .list {\n    width: 100%;\n    display: flex;\n    flex-wrap: wrap;\n  }\n";
 	appendNode( style, document.head );
 }
 
@@ -52,7 +45,7 @@ function create_main_fragment ( state, component ) {
 		},
 
 		hydrate: function ( nodes ) {
-			setAttribute( div, 'svelte-3794444557', '' );
+			setAttribute( div, 'svelte-854233428', '' );
 			div.className = "list";
 		},
 
@@ -112,10 +105,6 @@ function create_each_block ( state, each_block_value, file, file_index, componen
 		}
 	});
 
-	file_1.on( 'browse', function ( event ) {
-		component.browse(event);
-	});
-
 	return {
 		create: function () {
 			file_1._fragment.create();
@@ -161,7 +150,7 @@ function List ( options ) {
 	this._yield = options._yield;
 
 	this._torndown = false;
-	if ( !document.getElementById( 'svelte-3794444557-style' ) ) add_css();
+	if ( !document.getElementById( 'svelte-854233428-style' ) ) add_css();
 	this._oncreate = [];
 
 	this._fragment = create_main_fragment( this._state, this );
@@ -174,7 +163,7 @@ function List ( options ) {
 	callAll(this._oncreate);
 }
 
-assign( List.prototype, template.methods, {
+assign( List.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,

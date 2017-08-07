@@ -1,7 +1,6 @@
 <div class="list">
   {{#each files as file}}
     <File
-      on:browse="browse(event)"
       name={{file.name}}
       path={{file.path}}
       thumbnail={{file.thumbnail}}
@@ -12,17 +11,11 @@
 
 <script>
   import File from './File'
-  const { ipcRenderer } = require('electron')
 
   export default {
     data () {
       return {
         files: [],
-      }
-    },
-    methods: {
-      browse: function (path) {
-        ipcRenderer.send('change-path', path)
       }
     },
     components: {

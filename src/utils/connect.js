@@ -1,13 +1,13 @@
-const { noop } = require('lodash')
+const {
+  noop,
+  cloneDeep,
+} = require('lodash')
 
 const shallowEqualObjects = require('shallow-equal/objects')
 const { getStore } = require('state/store')
 
 // eslint-disable-next-line no-empty-function
 module.exports = (mapStateToData = noop, mapDispatchToData = noop) => Component => {
-  let instance
-  let data
-  let options
   const store = getStore()
 
   const getNextData = (state, data, dispatch) => {
@@ -17,25 +17,47 @@ module.exports = (mapStateToData = noop, mapDispatchToData = noop) => Component 
     return Object.assign({}, data, stateToData, dispatchToData)
   }
 
-  const unsubscribe = store.subscribe(() => {
-    const nextData = getNextData(store.getState(), options.data, store.dispatch)
-
-    if (!shallowEqualObjects(data, nextData)) {
-      data = nextData
-      instance.set(data)
-    }
-  })
-
   return function(pOptions) {
-    options = pOptions
+    const options = cloneDeep(pOptions)
+
     const nextData = getNextData(store.getState(), options.data, store.dispatch)
-    data = nextData
+    let data = nextData
     const newOptions = Object.assign({}, options, { data })
 
-    instance = new Component(newOptions)
+    const instance = new Component(newOptions)
+
+    let justUpdate = false
+    let isDestroying = false
+
+    const updateIfNeccessary = () => {
+      const nextData = getNextData(store.getState(), instance._state, store.dispatch)
+      if (!shallowEqualObjects(data, nextData)) {
+        data = nextData
+        instance.set(data)
+      }
+    }
+
+    const unsubscribe = store.subscribe(() => {
+      if (isDestroying) return
+      justUpdate = true
+
+      updateIfNeccessary()
+    })
+
+    const observers = Object.keys(instance._state).map(k => {
+      return instance.observe(k, (newValue, oldValue) => {
+        if (oldValue === undefined) return
+        if (justUpdate) return
+        justUpdate = false
+
+        updateIfNeccessary()
+      })
+    })
 
     instance.on('destroy', () => {
+      isDestroying = true
       unsubscribe()
+      observers.forEach(o => o.cancel())
     })
 
     return instance

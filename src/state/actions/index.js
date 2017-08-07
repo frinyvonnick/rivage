@@ -11,3 +11,10 @@ exports.setFiles = files => ({
   type: SET_FILES,
   files,
 })
+
+const OPEN_ITEM = 'OPEN_ITEM'
+exports.OPEN_ITEM = OPEN_ITEM
+exports.openItem = fullPath => ({
+  type: OPEN_ITEM,
+  fullPath,
+})
