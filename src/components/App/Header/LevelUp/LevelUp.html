@@ -1,0 +1,30 @@
+<button on:click="click()">
+  <i class="fa fa-level-up"></i>
+</button>
+
+<script>
+  const { noop } = require('lodash')
+
+  export default {
+    data() {
+      return {
+        goLevelUp: noop,
+      }
+    },
+    methods: {
+      click: function () {
+        this._state.goLevelUp()
+      },
+    },
+  }
+</script>
+
+<style>
+  button {
+    padding: 10px 15px;
+  }
+
+  button i {
+    font-size: 1.4em;
+  }
+</style>

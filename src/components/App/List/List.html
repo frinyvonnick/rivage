@@ -1,0 +1,34 @@
+<div class="list">
+  {{#each files as file}}
+    <File
+      name={{file.name}}
+      path={{file.path}}
+      thumbnail={{file.thumbnail}}
+      isDirectory={{file.isDirectory}}
+    />
+  {{/each}}
+</div>
+
+<script>
+  const { File } = require('./File')
+
+  export default {
+    data () {
+      return {
+        files: [],
+      }
+    },
+    components: {
+      File,
+    }
+  }
+</script>
+
+<style>
+  .list {
+    padding: 10px 15px;
+    width: 100%;
+    display: flex;
+    flex-wrap: wrap;
+  }
+</style>

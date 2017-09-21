@@ -1,59 +1,97 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.Header = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
+const { LevelUp } = require('./LevelUp')
+const { AddressBar } = require('./AddressBar')
+const { SearchBar } = require('./SearchBar')
 
-  return {
-    components: {
-      List,
-      Header,
-    },
-  }
+return {
+  components: {
+    LevelUp,
+    AddressBar,
+    SearchBar,
+  },
+}
 }());
 
-function create_main_fragment ( state, component ) {
-	var div, text;
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-2304861103', '' );
+}
 
-	var header = new template.components.Header({
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-2304861103-style';
+	style.textContent = "[svelte-2304861103].header,[svelte-2304861103] .header{padding:10px 15px;background-color:#ddd;border-bottom:#ccc;display:flex;align-items:center}[svelte-2304861103].header > *,[svelte-2304861103] .header > *{margin:0 10px}";
+	appendNode( style, document.head );
+}
+
+function create_main_fragment ( state, component ) {
+	var link, text, div, text_1, text_2;
+
+	var levelup = new template.components.LevelUp({
 		_root: component._root
 	});
 
-	var list = new template.components.List({
+	var addressbar = new template.components.AddressBar({
+		_root: component._root
+	});
+
+	var searchbar = new template.components.SearchBar({
 		_root: component._root
 	});
 
 	return {
 		create: function () {
+			link = createElement( 'link' );
+			text = createText( "\n" );
 			div = createElement( 'div' );
-			header._fragment.create();
-			text = createText( "\n  " );
-			list._fragment.create();
+			levelup._fragment.create();
+			text_1 = createText( "\n  " );
+			addressbar._fragment.create();
+			text_2 = createText( "\n  " );
+			searchbar._fragment.create();
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( link );
+			link.rel = "stylesheet";
+			setAttribute( link, 'type', "text/css" );
+			link.href = "../../node_modules/js-autocomplete/auto-complete.css";
+			encapsulateStyles( div );
+			div.className = "header";
 		},
 
 		mount: function ( target, anchor ) {
+			insertNode( link, target, anchor );
+			insertNode( text, target, anchor );
 			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
-			appendNode( text, div );
-			list._fragment.mount( div, null );
+			levelup._fragment.mount( div, null );
+			appendNode( text_1, div );
+			addressbar._fragment.mount( div, null );
+			appendNode( text_2, div );
+			searchbar._fragment.mount( div, null );
 		},
 
 		unmount: function () {
+			detachNode( link );
+			detachNode( text );
 			detachNode( div );
 		},
 
 		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
+			levelup.destroy( false );
+			addressbar.destroy( false );
+			searchbar.destroy( false );
 		}
 	};
 }
 
-function App ( options ) {
+function Header ( options ) {
 	options = options || {};
 	this._state = options.data || {};
 
@@ -68,6 +106,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
+	if ( !document.getElementById( 'svelte-2304861103-style' ) ) add_css();
 
 	if ( !options._root ) {
 		this._oncreate = [];
@@ -91,7 +130,7 @@ function App ( options ) {
 	}
 }
 
-assign( App.prototype, {
+assign( Header.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,14 +138,14 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+Header.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+Header.prototype.teardown = Header.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -118,8 +157,16 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
+}
+
+function appendNode(node, target) {
+	target.appendChild(node);
 }
 
 function createText(data) {
@@ -128,10 +175,6 @@ function createText(data) {
 
 function insertNode(node, target, anchor) {
 	target.insertBefore(node, anchor);
-}
-
-function appendNode(node, target) {
-	target.appendChild(node);
 }
 
 function detachNode(node) {
@@ -241,6 +284,6 @@ function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return App;
+return Header;
 
 })));

@@ -1,0 +1,64 @@
+<div class={{className}}>
+  <img
+    on:click="click()"
+    src={{thumbnail}}
+    height="80"
+  />
+  <p title={{name}}>{{name}}</p>
+</div>
+
+<script>
+  const { noop } = require('lodash')
+  const classNames = require('classnames')
+
+  export default {
+    data () {
+      return {
+        thumbnail: '',
+        name: '',
+        path: '',
+        isDirectory: false,
+        setAddress: noop,
+        openItem: noop,
+      }
+    },
+    computed: {
+      className: isDirectory => classNames('file', { 'directory' :isDirectory })
+    },
+    methods: {
+      click: function () {
+        const { isDirectory, setAddress, openItem, path } = this._state
+
+        if (isDirectory) {
+          setAddress()
+        } else {
+          openItem()
+        }
+      },
+    }
+  }
+</script>
+
+<style>
+  .file {
+    padding: 10px;
+    width: 12.5%;
+    min-width: 100px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  .file p {
+    margin-bottom: 0;
+    margin-top: 5px;
+    width: 100%;
+    text-align: center;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+
+  .directory svg{
+    fill: yellow;
+  }
+</style>

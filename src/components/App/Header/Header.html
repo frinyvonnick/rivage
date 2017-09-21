@@ -1,0 +1,34 @@
+<link rel="stylesheet" type="text/css" href="../../node_modules/js-autocomplete/auto-complete.css">
+<div class="header">
+  <LevelUp />
+  <AddressBar />
+  <SearchBar />
+</div>
+
+<script>
+const { LevelUp } = require('./LevelUp')
+const { AddressBar } = require('./AddressBar')
+const { SearchBar } = require('./SearchBar')
+
+export default {
+  components: {
+    LevelUp,
+    AddressBar,
+    SearchBar,
+  },
+}
+</script>
+
+<style>
+  .header {
+    padding: 10px 15px;
+    background-color: #ddd;
+    border-bottom: #ccc;
+    display: flex;
+    align-items: center;
+  }
+
+  .header > * {
+    margin: 0 10px;
+  }
+</style>

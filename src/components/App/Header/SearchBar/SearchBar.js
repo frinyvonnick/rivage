@@ -1,61 +1,82 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.SearchBar = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
-
   return {
-    components: {
-      List,
-      Header,
+    data() {
+      return {
+        search: '',
+      }
+    },
+    methods: {
+      keyup: function (e) {
+        if (e.key === "Enter") {
+          this._state.setSearch(e.target.value)
+        }
+      },
     },
   }
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-3501490515', '' );
+}
+
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-3501490515-style';
+	style.textContent = "[svelte-3501490515]#search,[svelte-3501490515] #search{width:250px;padding:10px 15px}";
+	appendNode( style, document.head );
+}
+
 function create_main_fragment ( state, component ) {
-	var div, text;
+	var input, input_value_value;
 
-	var header = new template.components.Header({
-		_root: component._root
-	});
-
-	var list = new template.components.List({
-		_root: component._root
-	});
+	function keyup_handler ( event ) {
+		component.keyup(event);
+	}
 
 	return {
 		create: function () {
-			div = createElement( 'div' );
-			header._fragment.create();
-			text = createText( "\n  " );
-			list._fragment.create();
+			input = createElement( 'input' );
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( input );
+			input.id = "search";
+			input.type = "text";
+			input.value = input_value_value = state.search;
+			input.placeholder = "Rechercher un fichier 🔎";
+			addListener( input, 'keyup', keyup_handler );
 		},
 
 		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
-			appendNode( text, div );
-			list._fragment.mount( div, null );
+			insertNode( input, target, anchor );
+		},
+
+		update: function ( changed, state ) {
+			if ( input_value_value !== ( input_value_value = state.search ) ) {
+				input.value = input_value_value;
+			}
 		},
 
 		unmount: function () {
-			detachNode( div );
+			detachNode( input );
 		},
 
 		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
+			removeListener( input, 'keyup', keyup_handler );
 		}
 	};
 }
 
-function App ( options ) {
+function SearchBar ( options ) {
 	options = options || {};
-	this._state = options.data || {};
+	this._state = assign( template.data(), options.data );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -68,12 +89,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-
-	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+	if ( !document.getElementById( 'svelte-3501490515-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -81,17 +97,9 @@ function App ( options ) {
 		this._fragment.create();
 		this._fragment.mount( options.target, null );
 	}
-
-	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
-		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
-	}
 }
 
-assign( App.prototype, {
+assign( SearchBar.prototype, template.methods, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,14 +107,15 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+SearchBar.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
+	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+SearchBar.prototype.teardown = SearchBar.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -118,28 +127,32 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
-}
-
-function createText(data) {
-	return document.createTextNode(data);
-}
-
-function insertNode(node, target, anchor) {
-	target.insertBefore(node, anchor);
 }
 
 function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
+}
+
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
 function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
 }
 
 function assign(target) {
@@ -237,10 +250,14 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
+}
+
 function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return App;
+return SearchBar;
 
 })));

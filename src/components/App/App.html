@@ -1,1 +1,16 @@
-<div>Hello {{ name }}!</div>
+<div>
+  <Header />
+  <List />
+</div>
+
+<script>
+  const { Header } = require('./Header')
+  const { List } = require('./List')
+
+  export default {
+    components: {
+      List,
+      Header,
+    },
+  }
+</script>

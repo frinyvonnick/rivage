@@ -1,61 +1,75 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.LevelUp = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
+  const { noop } = require('lodash')
 
   return {
-    components: {
-      List,
-      Header,
+    data() {
+      return {
+        goLevelUp: noop,
+      }
+    },
+    methods: {
+      click: function () {
+        this._state.goLevelUp()
+      },
     },
   }
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-1730372808', '' );
+}
+
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-1730372808-style';
+	style.textContent = "button[svelte-1730372808],[svelte-1730372808] button{padding:10px 15px}button[svelte-1730372808] i,[svelte-1730372808] button i{font-size:1.4em}";
+	appendNode( style, document.head );
+}
+
 function create_main_fragment ( state, component ) {
-	var div, text;
+	var button, i;
 
-	var header = new template.components.Header({
-		_root: component._root
-	});
-
-	var list = new template.components.List({
-		_root: component._root
-	});
+	function click_handler ( event ) {
+		component.click();
+	}
 
 	return {
 		create: function () {
-			div = createElement( 'div' );
-			header._fragment.create();
-			text = createText( "\n  " );
-			list._fragment.create();
+			button = createElement( 'button' );
+			i = createElement( 'i' );
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( button );
+			addListener( button, 'click', click_handler );
+			i.className = "fa fa-level-up";
 		},
 
 		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
-			appendNode( text, div );
-			list._fragment.mount( div, null );
+			insertNode( button, target, anchor );
+			appendNode( i, button );
 		},
 
 		unmount: function () {
-			detachNode( div );
+			detachNode( button );
 		},
 
 		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
+			removeListener( button, 'click', click_handler );
 		}
 	};
 }
 
-function App ( options ) {
+function LevelUp ( options ) {
 	options = options || {};
-	this._state = options.data || {};
+	this._state = assign( template.data(), options.data );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -68,12 +82,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-
-	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+	if ( !document.getElementById( 'svelte-1730372808-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -81,17 +90,9 @@ function App ( options ) {
 		this._fragment.create();
 		this._fragment.mount( options.target, null );
 	}
-
-	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
-		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
-	}
 }
 
-assign( App.prototype, {
+assign( LevelUp.prototype, template.methods, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,14 +100,14 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+LevelUp.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+LevelUp.prototype.teardown = LevelUp.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -118,28 +119,32 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
-}
-
-function createText(data) {
-	return document.createTextNode(data);
-}
-
-function insertNode(node, target, anchor) {
-	target.insertBefore(node, anchor);
 }
 
 function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
+}
+
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
 function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
 }
 
 function assign(target) {
@@ -237,10 +242,14 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
+}
+
 function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return App;
+return LevelUp;
 
 })));

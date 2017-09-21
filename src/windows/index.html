@@ -2,19 +2,34 @@
 <html>
 	<head>
 		<meta charset="utf-8">
-		<title>Electron boilerplate</title>
+		<title>Rivage</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto|Roboto+Condensed" rel="stylesheet">
 		<link rel="stylesheet" href="../assets/css/index.css">
+		<link rel="stylesheet" href="../../node_modules/font-awesome/css/font-awesome.min.css">
 	</head>
 	<body>
 	</body>
 	<script>
-		const App = require('../components/App').default
+		// Let use path aliases like src/main-process/windows instead of ../main-process/windows
+		require('module-alias/register')
+		const { createStore } = require('state/store')
+		const { applyMiddleware } = require('redux')
+		const logger = require('redux-logger')
 
-		new App({
+		const store = createStore([
+			applyMiddleware(logger),
+		])
+
+		store.subscribe(() => {
+			console.log('state', store.getState())
+		})
+
+		// Have to require App only after store got created
+		const App = require('../components/App')
+
+		const app = new App({
       target: document.querySelector('body'),
-      data: {
-        args: __args__
-      }
     })
+
 	</script>
 </html>

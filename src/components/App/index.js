@@ -1,1 +1,1 @@
-exports.default = require('./App.js')
+module.exports = require('./App')

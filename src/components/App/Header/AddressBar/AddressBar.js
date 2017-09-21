@@ -1,61 +1,104 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.AddressBar = factory());
 }(this, (function () { 'use strict';
 
-var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
+function recompute ( state, newState, oldState, isInitial ) {
+	if ( isInitial || ( 'availableAddresses' in newState && differs( state.availableAddresses, oldState.availableAddresses ) ) || ( 'address' in newState && differs( state.address, oldState.address ) ) ) {
+		state.addresses = newState.addresses = template.computed.addresses( state.availableAddresses, state.address );
+	}
+}
 
-  return {
-    components: {
-      List,
-      Header,
-    },
-  }
+var template = (function () {
+const { noop } = require('lodash')
+const AutoComplete = require('js-autocomplete')
+
+return {
+  oncreate () {
+    const inputSelector = '#address'
+
+    this.autoComplete = new AutoComplete({
+      selector: inputSelector,
+      minChars: 1,
+      cache: false,
+      source: (term, response) => {
+        if(term.length < this._state.address.length) return response([])
+        response(this._state.addresses.filter(address => address.toLowerCase().includes(term.toLowerCase())))
+      }
+    })
+
+    document.querySelector(inputSelector).addEventListener('keyup', e => {
+      if (e.keyCode == 13) {
+        this._state.setAddress(e.target.value)
+      }
+    })
+  },
+  computed: {
+    addresses: (availableAddresses, address) => availableAddresses.map(a => address + a)
+  },
+  ondestroy () {
+    this.autoComplete.destroy()
+  },
+  data () {
+    return {
+      address: '',
+      availableAddresses: [],
+      setAddress: noop,
+    }
+  },
+}
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-939388320', '' );
+}
+
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-939388320-style';
+	style.textContent = "[svelte-939388320]#address,[svelte-939388320] #address{width:100%;padding:10px 15px}";
+	appendNode( style, document.head );
+}
+
 function create_main_fragment ( state, component ) {
-	var div, text;
-
-	var header = new template.components.Header({
-		_root: component._root
-	});
-
-	var list = new template.components.List({
-		_root: component._root
-	});
+	var input, input_value_value;
 
 	return {
 		create: function () {
-			div = createElement( 'div' );
-			header._fragment.create();
-			text = createText( "\n  " );
-			list._fragment.create();
+			input = createElement( 'input' );
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( input );
+			input.id = "address";
+			input.type = "text";
+			input.value = input_value_value = state.address;
 		},
 
 		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
-			appendNode( text, div );
-			list._fragment.mount( div, null );
+			insertNode( input, target, anchor );
+		},
+
+		update: function ( changed, state ) {
+			if ( input_value_value !== ( input_value_value = state.address ) ) {
+				input.value = input_value_value;
+			}
 		},
 
 		unmount: function () {
-			detachNode( div );
+			detachNode( input );
 		},
 
-		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
-		}
+		destroy: noop
 	};
 }
 
-function App ( options ) {
+function AddressBar ( options ) {
 	options = options || {};
-	this._state = options.data || {};
+	this._state = assign( template.data(), options.data );
+	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -68,12 +111,15 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
+	if ( !document.getElementById( 'svelte-939388320-style' ) ) add_css();
+
+	var oncreate = template.oncreate.bind( this );
 
 	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+		this._oncreate = [oncreate];
+	} else {
+	 	this._root._oncreate.push(oncreate);
+	 }
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -83,15 +129,11 @@ function App ( options ) {
 	}
 
 	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
 		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
 	}
 }
 
-assign( App.prototype, {
+assign( AddressBar.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,16 +141,19 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+AddressBar.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
+	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
+	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+AddressBar.prototype.teardown = AddressBar.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
+	template.ondestroy.call( this );
 
 	if ( detach !== false ) this._fragment.unmount();
 	this._fragment.destroy();
@@ -118,29 +163,31 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
+
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
-}
-
-function createText(data) {
-	return document.createTextNode(data);
-}
-
-function insertNode(node, target, anchor) {
-	target.insertBefore(node, anchor);
 }
 
 function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
 function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
-}
+function noop() {}
 
 function assign(target) {
 	var k,
@@ -153,6 +200,10 @@ function assign(target) {
 	}
 
 	return target;
+}
+
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {
@@ -237,10 +288,6 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
-}
-
-return App;
+return AddressBar;
 
 })));

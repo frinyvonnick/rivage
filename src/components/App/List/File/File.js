@@ -1,45 +1,108 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.File = factory());
 }(this, (function () { 'use strict';
 
+function recompute ( state, newState, oldState, isInitial ) {
+	if ( isInitial || ( 'isDirectory' in newState && differs( state.isDirectory, oldState.isDirectory ) ) ) {
+		state.className = newState.className = template.computed.className( state.isDirectory );
+	}
+}
+
 var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
+  const { noop } = require('lodash')
+  const classNames = require('classnames')
 
   return {
-    components: {
-      List,
-      Header,
+    data () {
+      return {
+        thumbnail: '',
+        name: '',
+        path: '',
+        isDirectory: false,
+        setAddress: noop,
+        openItem: noop,
+      }
     },
+    computed: {
+      className: isDirectory => classNames('file', { 'directory' :isDirectory })
+    },
+    methods: {
+      click: function () {
+        const { isDirectory, setAddress, openItem, path } = this._state
+
+        if (isDirectory) {
+          setAddress()
+        } else {
+          openItem()
+        }
+      },
+    }
   }
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-3076271833', '' );
+}
+
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-3076271833-style';
+	style.textContent = "[svelte-3076271833].file,[svelte-3076271833] .file{padding:10px;width:12.5%;min-width:100px;display:flex;flex-direction:column;align-items:center}[svelte-3076271833].file p,[svelte-3076271833] .file p{margin-bottom:0;margin-top:5px;width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}[svelte-3076271833].directory svg,[svelte-3076271833] .directory svg{fill:yellow}";
+	appendNode( style, document.head );
+}
+
 function create_main_fragment ( state, component ) {
-	var div, text;
+	var div, div_class_value, img, img_src_value, text, p, p_title_value, text_1_value, text_1;
 
-	var header = new template.components.Header({
-		_root: component._root
-	});
-
-	var list = new template.components.List({
-		_root: component._root
-	});
+	function click_handler ( event ) {
+		component.click();
+	}
 
 	return {
 		create: function () {
 			div = createElement( 'div' );
-			header._fragment.create();
+			img = createElement( 'img' );
 			text = createText( "\n  " );
-			list._fragment.create();
+			p = createElement( 'p' );
+			text_1 = createText( text_1_value = state.name );
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( div );
+			div.className = div_class_value = state.className;
+			img.src = img_src_value = state.thumbnail;
+			img.height = "80";
+			addListener( img, 'click', click_handler );
+			p.title = p_title_value = state.name;
 		},
 
 		mount: function ( target, anchor ) {
 			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
+			appendNode( img, div );
 			appendNode( text, div );
-			list._fragment.mount( div, null );
+			appendNode( p, div );
+			appendNode( text_1, p );
+		},
+
+		update: function ( changed, state ) {
+			if ( div_class_value !== ( div_class_value = state.className ) ) {
+				div.className = div_class_value;
+			}
+
+			if ( img_src_value !== ( img_src_value = state.thumbnail ) ) {
+				img.src = img_src_value;
+			}
+
+			if ( p_title_value !== ( p_title_value = state.name ) ) {
+				p.title = p_title_value;
+			}
+
+			if ( text_1_value !== ( text_1_value = state.name ) ) {
+				text_1.data = text_1_value;
+			}
 		},
 
 		unmount: function () {
@@ -47,15 +110,15 @@ function create_main_fragment ( state, component ) {
 		},
 
 		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
+			removeListener( img, 'click', click_handler );
 		}
 	};
 }
 
-function App ( options ) {
+function File ( options ) {
 	options = options || {};
-	this._state = options.data || {};
+	this._state = assign( template.data(), options.data );
+	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -68,12 +131,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-
-	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+	if ( !document.getElementById( 'svelte-3076271833-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -81,17 +139,9 @@ function App ( options ) {
 		this._fragment.create();
 		this._fragment.mount( options.target, null );
 	}
-
-	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
-		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
-	}
 }
 
-assign( App.prototype, {
+assign( File.prototype, template.methods, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,14 +149,16 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+File.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
+	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
+	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+File.prototype.teardown = File.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -118,28 +170,40 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
+
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
-}
-
-function createText(data) {
-	return document.createTextNode(data);
-}
-
-function insertNode(node, target, anchor) {
-	target.insertBefore(node, anchor);
 }
 
 function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function createText(data) {
+	return document.createTextNode(data);
+}
+
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
+}
+
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
 function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
 }
 
 function assign(target) {
@@ -237,10 +301,10 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
 }
 
-return App;
+return File;
 
 })));

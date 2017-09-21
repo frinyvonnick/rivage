@@ -1,61 +1,150 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.App = factory());
+	(global.List = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { Header } = require('./Header')
-  const { List } = require('./List')
+  const { File } = require('./File')
 
   return {
-    components: {
-      List,
-      Header,
+    data () {
+      return {
+        files: [],
+      }
     },
+    components: {
+      File,
+    }
   }
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-3579577842', '' );
+}
+
+function add_css () {
+	var style = createElement( 'style' );
+	style.id = 'svelte-3579577842-style';
+	style.textContent = "[svelte-3579577842].list,[svelte-3579577842] .list{padding:10px 15px;width:100%;display:flex;flex-wrap:wrap}";
+	appendNode( style, document.head );
+}
+
 function create_main_fragment ( state, component ) {
-	var div, text;
+	var div;
 
-	var header = new template.components.Header({
-		_root: component._root
-	});
+	var each_block_value = state.files;
 
-	var list = new template.components.List({
-		_root: component._root
-	});
+	var each_block_iterations = [];
+
+	for ( var i = 0; i < each_block_value.length; i += 1 ) {
+		each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
+	}
 
 	return {
 		create: function () {
 			div = createElement( 'div' );
-			header._fragment.create();
-			text = createText( "\n  " );
-			list._fragment.create();
+
+			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
+				each_block_iterations[i].create();
+			}
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( div );
+			div.className = "list";
 		},
 
 		mount: function ( target, anchor ) {
 			insertNode( div, target, anchor );
-			header._fragment.mount( div, null );
-			appendNode( text, div );
-			list._fragment.mount( div, null );
+
+			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
+				each_block_iterations[i].mount( div, null );
+			}
+		},
+
+		update: function ( changed, state ) {
+			var each_block_value = state.files;
+
+			if ( 'files' in changed ) {
+				for ( var i = 0; i < each_block_value.length; i += 1 ) {
+					if ( each_block_iterations[i] ) {
+						each_block_iterations[i].update( changed, state, each_block_value, each_block_value[i], i );
+					} else {
+						each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
+						each_block_iterations[i].create();
+						each_block_iterations[i].mount( div, null );
+					}
+				}
+
+				for ( ; i < each_block_iterations.length; i += 1 ) {
+					each_block_iterations[i].unmount();
+					each_block_iterations[i].destroy();
+				}
+				each_block_iterations.length = each_block_value.length;
+			}
 		},
 
 		unmount: function () {
 			detachNode( div );
+
+			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
+				each_block_iterations[i].unmount();
+			}
 		},
 
 		destroy: function () {
-			header.destroy( false );
-			list.destroy( false );
+			destroyEach( each_block_iterations, false, 0 );
 		}
 	};
 }
 
-function App ( options ) {
+function create_each_block ( state, each_block_value, file, file_index, component ) {
+
+	var file_1 = new template.components.File({
+		_root: component._root,
+		data: {
+			name: file.name,
+			path: file.path,
+			thumbnail: file.thumbnail,
+			isDirectory: file.isDirectory
+		}
+	});
+
+	return {
+		create: function () {
+			file_1._fragment.create();
+		},
+
+		mount: function ( target, anchor ) {
+			file_1._fragment.mount( target, anchor );
+		},
+
+		update: function ( changed, state, each_block_value, file, file_index ) {
+			var file_1_changes = {};
+
+			if ( 'files' in changed ) file_1_changes.name = file.name;
+			if ( 'files' in changed ) file_1_changes.path = file.path;
+			if ( 'files' in changed ) file_1_changes.thumbnail = file.thumbnail;
+			if ( 'files' in changed ) file_1_changes.isDirectory = file.isDirectory;
+
+			if ( Object.keys( file_1_changes ).length ) file_1._set( file_1_changes );
+		},
+
+		unmount: function () {
+			file_1._fragment.unmount();
+		},
+
+		destroy: function () {
+			file_1.destroy( false );
+		}
+	};
+}
+
+function List ( options ) {
 	options = options || {};
-	this._state = options.data || {};
+	this._state = assign( template.data(), options.data );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -68,6 +157,7 @@ function App ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
+	if ( !document.getElementById( 'svelte-3579577842-style' ) ) add_css();
 
 	if ( !options._root ) {
 		this._oncreate = [];
@@ -91,7 +181,7 @@ function App ( options ) {
 	}
 }
 
-assign( App.prototype, {
+assign( List.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -99,14 +189,15 @@ assign( App.prototype, {
  	set: set
  });
 
-App.prototype._set = function _set ( newState ) {
+List.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
+	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+List.prototype.teardown = List.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -118,28 +209,30 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._destroyed = true;
 };
 
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
+
 function createElement(name) {
 	return document.createElement(name);
-}
-
-function createText(data) {
-	return document.createTextNode(data);
-}
-
-function insertNode(node, target, anchor) {
-	target.insertBefore(node, anchor);
 }
 
 function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function insertNode(node, target, anchor) {
+	target.insertBefore(node, anchor);
+}
+
 function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
+function destroyEach(iterations, detach, start) {
+	for (var i = start; i < iterations.length; i += 1) {
+		if (iterations[i]) iterations[i].destroy(detach);
+	}
 }
 
 function assign(target) {
@@ -153,6 +246,10 @@ function assign(target) {
 	}
 
 	return target;
+}
+
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {
@@ -241,6 +338,6 @@ function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return App;
+return List;
 
 })));
