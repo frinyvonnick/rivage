@@ -1,148 +1,80 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.List = factory());
+	(global.SearchBar = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { File } = require('./File')
-
   return {
-    data () {
+    data() {
       return {
-        files: [],
+        search: '',
       }
     },
-    components: {
-      File,
-    }
+    methods: {
+      keyup: function (e) {
+        if (e.key === "Enter") {
+          this._state.setSearch(e.target.value)
+        }
+      },
+    },
   }
 }());
 
 function encapsulateStyles ( node ) {
-	setAttribute( node, 'svelte-3579577842', '' );
+	setAttribute( node, 'svelte-3501490515', '' );
 }
 
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-3579577842-style';
-	style.textContent = "[svelte-3579577842].list,[svelte-3579577842] .list{padding:10px 15px;width:100%;display:flex;flex-wrap:wrap}";
+	style.id = 'svelte-3501490515-style';
+	style.textContent = "[svelte-3501490515]#search,[svelte-3501490515] #search{width:250px;padding:10px 15px}";
 	appendNode( style, document.head );
 }
 
 function create_main_fragment ( state, component ) {
-	var div;
+	var input, input_value_value;
 
-	var each_block_value = state.files;
-
-	var each_block_iterations = [];
-
-	for ( var i = 0; i < each_block_value.length; i += 1 ) {
-		each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
+	function keyup_handler ( event ) {
+		component.keyup(event);
 	}
 
 	return {
 		create: function () {
-			div = createElement( 'div' );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].create();
-			}
+			input = createElement( 'input' );
 			this.hydrate();
 		},
 
 		hydrate: function ( nodes ) {
-			encapsulateStyles( div );
-			div.className = "list";
+			encapsulateStyles( input );
+			input.id = "search";
+			input.type = "text";
+			input.value = input_value_value = state.search;
+			input.placeholder = "Rechercher un fichier 🔎";
+			addListener( input, 'keyup', keyup_handler );
 		},
 
 		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].mount( div, null );
-			}
+			insertNode( input, target, anchor );
 		},
 
 		update: function ( changed, state ) {
-			var each_block_value = state.files;
-
-			if ( 'files' in changed ) {
-				for ( var i = 0; i < each_block_value.length; i += 1 ) {
-					if ( each_block_iterations[i] ) {
-						each_block_iterations[i].update( changed, state, each_block_value, each_block_value[i], i );
-					} else {
-						each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
-						each_block_iterations[i].create();
-						each_block_iterations[i].mount( div, null );
-					}
-				}
-
-				for ( ; i < each_block_iterations.length; i += 1 ) {
-					each_block_iterations[i].unmount();
-					each_block_iterations[i].destroy();
-				}
-				each_block_iterations.length = each_block_value.length;
+			if ( input_value_value !== ( input_value_value = state.search ) ) {
+				input.value = input_value_value;
 			}
 		},
 
 		unmount: function () {
-			detachNode( div );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].unmount();
-			}
+			detachNode( input );
 		},
 
 		destroy: function () {
-			destroyEach( each_block_iterations, false, 0 );
+			removeListener( input, 'keyup', keyup_handler );
 		}
 	};
 }
 
-function create_each_block ( state, each_block_value, file, file_index, component ) {
-
-	var file_1 = new template.components.File({
-		_root: component._root,
-		data: {
-			name: file.name,
-			path: file.path,
-			thumbnail: file.thumbnail,
-			isDirectory: file.isDirectory
-		}
-	});
-
-	return {
-		create: function () {
-			file_1._fragment.create();
-		},
-
-		mount: function ( target, anchor ) {
-			file_1._fragment.mount( target, anchor );
-		},
-
-		update: function ( changed, state, each_block_value, file, file_index ) {
-			var file_1_changes = {};
-
-			if ( 'files' in changed ) file_1_changes.name = file.name;
-			if ( 'files' in changed ) file_1_changes.path = file.path;
-			if ( 'files' in changed ) file_1_changes.thumbnail = file.thumbnail;
-			if ( 'files' in changed ) file_1_changes.isDirectory = file.isDirectory;
-
-			if ( Object.keys( file_1_changes ).length ) file_1._set( file_1_changes );
-		},
-
-		unmount: function () {
-			file_1._fragment.unmount();
-		},
-
-		destroy: function () {
-			file_1.destroy( false );
-		}
-	};
-}
-
-function List ( options ) {
+function SearchBar ( options ) {
 	options = options || {};
 	this._state = assign( template.data(), options.data );
 
@@ -157,13 +89,7 @@ function List ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-	if ( !document.getElementById( 'svelte-3579577842-style' ) ) add_css();
-
-	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+	if ( !document.getElementById( 'svelte-3501490515-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -171,17 +97,9 @@ function List ( options ) {
 		this._fragment.create();
 		this._fragment.mount( options.target, null );
 	}
-
-	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
-		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
-	}
 }
 
-assign( List.prototype, {
+assign( SearchBar.prototype, template.methods, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -189,7 +107,7 @@ assign( List.prototype, {
  	set: set
  });
 
-List.prototype._set = function _set ( newState ) {
+SearchBar.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
@@ -197,7 +115,7 @@ List.prototype._set = function _set ( newState ) {
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-List.prototype.teardown = List.prototype.destroy = function destroy ( detach ) {
+SearchBar.prototype.teardown = SearchBar.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -221,6 +139,10 @@ function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function addListener(node, event, handler) {
+	node.addEventListener(event, handler, false);
+}
+
 function insertNode(node, target, anchor) {
 	target.insertBefore(node, anchor);
 }
@@ -229,10 +151,8 @@ function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function destroyEach(iterations, detach, start) {
-	for (var i = start; i < iterations.length; i += 1) {
-		if (iterations[i]) iterations[i].destroy(detach);
-	}
+function removeListener(node, event, handler) {
+	node.removeEventListener(event, handler, false);
 }
 
 function assign(target) {
@@ -246,10 +166,6 @@ function assign(target) {
 	}
 
 	return target;
-}
-
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {
@@ -334,10 +250,14 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
+}
+
 function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return List;
+return SearchBar;
 
 })));

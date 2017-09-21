@@ -1,4 +1,4 @@
-<div class="file">
+<div class={{className}}>
   <img
     on:click="click()"
     src={{thumbnail}}
@@ -9,6 +9,7 @@
 
 <script>
   const { noop } = require('lodash')
+  const classNames = require('classnames')
 
   export default {
     data () {
@@ -21,6 +22,9 @@
         openItem: noop,
       }
     },
+    computed: {
+      className: isDirectory => classNames('file', { 'directory' :isDirectory })
+    },
     methods: {
       click: function () {
         const { isDirectory, setAddress, openItem, path } = this._state
@@ -30,7 +34,7 @@
         } else {
           openItem()
         }
-      }
+      },
     }
   }
 </script>
@@ -38,7 +42,7 @@
 <style>
   .file {
     padding: 10px;
-    width: 100px;
+    width: 12.5%;
     min-width: 100px;
     display: flex;
     flex-direction: column;
@@ -52,5 +56,9 @@
     white-space: nowrap;
     overflow: hidden;
     text-overflow: ellipsis;
+  }
+
+  .directory svg{
+    fill: yellow;
   }
 </style>

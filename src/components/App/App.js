@@ -1,26 +1,44 @@
 (function ( global, factory ) {
-	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory(require('./List')) :
-	typeof define === 'function' && define.amd ? define([''], factory) :
-	(global.App = factory(List));
-}(this, (function ( List ) { 'use strict';
+	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
+	typeof define === 'function' && define.amd ? define(factory) :
+	(global.App = factory());
+}(this, (function () { 'use strict';
 
-List = ( List && List.__esModule ) ? List['default'] : List;
+var template = (function () {
+  const { Header } = require('./Header')
+  const { List } = require('./List')
+
+  return {
+    components: {
+      List,
+      Header,
+    },
+  }
+}());
 
 function create_main_fragment ( state, component ) {
-	var div;
+	var div, text;
 
-	var list = new List({
+	var header = new template.components.Header({
+		_root: component._root
+	});
+
+	var list = new template.components.List({
 		_root: component._root
 	});
 
 	return {
 		create: function () {
 			div = createElement( 'div' );
+			header._fragment.create();
+			text = createText( "\n  " );
 			list._fragment.create();
 		},
 
 		mount: function ( target, anchor ) {
 			insertNode( div, target, anchor );
+			header._fragment.mount( div, null );
+			appendNode( text, div );
 			list._fragment.mount( div, null );
 		},
 
@@ -29,6 +47,7 @@ function create_main_fragment ( state, component ) {
 		},
 
 		destroy: function () {
+			header.destroy( false );
 			list.destroy( false );
 		}
 	};
@@ -48,8 +67,13 @@ function App ( options ) {
 	this._root = options._root || this;
 	this._yield = options._yield;
 
-	this._torndown = false;
-	this._oncreate = [];
+	this._destroyed = false;
+
+	if ( !options._root ) {
+		this._oncreate = [];
+		this._beforecreate = [];
+		this._aftercreate = [];
+	}
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -58,7 +82,13 @@ function App ( options ) {
 		this._fragment.mount( options.target, null );
 	}
 
-	callAll(this._oncreate);
+	if ( !options._root ) {
+		this._lock = true;
+		callAll(this._beforecreate);
+		callAll(this._oncreate);
+		callAll(this._aftercreate);
+		this._lock = false;
+	}
 }
 
 assign( App.prototype, {
@@ -74,10 +104,10 @@ App.prototype._set = function _set ( newState ) {
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	dispatchObservers( this, this._observers.post, newState, oldState );
-	callAll(this._oncreate);
 };
 
 App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
+	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
 	if ( detach !== false ) this._fragment.unmount();
@@ -85,15 +115,23 @@ App.prototype.teardown = App.prototype.destroy = function destroy ( detach ) {
 	this._fragment = null;
 
 	this._state = {};
-	this._torndown = true;
+	this._destroyed = true;
 };
 
 function createElement(name) {
 	return document.createElement(name);
 }
 
+function createText(data) {
+	return document.createTextNode(data);
+}
+
 function insertNode(node, target, anchor) {
 	target.insertBefore(node, anchor);
+}
+
+function appendNode(node, target) {
+	target.appendChild(node);
 }
 
 function detachNode(node) {
@@ -168,7 +206,12 @@ function on(eventName, handler) {
 
 function set(newState) {
 	this._set(assign({}, newState));
+	if (this._root._lock) return;
+	this._root._lock = true;
+	callAll(this._root._beforecreate);
 	callAll(this._root._oncreate);
+	callAll(this._root._aftercreate);
+	this._root._lock = false;
 }
 
 function dispatchObservers(component, group, newState, oldState) {

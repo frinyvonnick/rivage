@@ -1,150 +1,99 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.List = factory());
+	(global.Header = factory());
 }(this, (function () { 'use strict';
 
 var template = (function () {
-  const { File } = require('./File')
+const { LevelUp } = require('./LevelUp')
+const { AddressBar } = require('./AddressBar')
+const { SearchBar } = require('./SearchBar')
 
-  return {
-    data () {
-      return {
-        files: [],
-      }
-    },
-    components: {
-      File,
-    }
-  }
+return {
+  components: {
+    LevelUp,
+    AddressBar,
+    SearchBar,
+  },
+}
 }());
 
 function encapsulateStyles ( node ) {
-	setAttribute( node, 'svelte-3579577842', '' );
+	setAttribute( node, 'svelte-2304861103', '' );
 }
 
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-3579577842-style';
-	style.textContent = "[svelte-3579577842].list,[svelte-3579577842] .list{padding:10px 15px;width:100%;display:flex;flex-wrap:wrap}";
+	style.id = 'svelte-2304861103-style';
+	style.textContent = "[svelte-2304861103].header,[svelte-2304861103] .header{padding:10px 15px;background-color:#ddd;border-bottom:#ccc;display:flex;align-items:center}[svelte-2304861103].header > *,[svelte-2304861103] .header > *{margin:0 10px}";
 	appendNode( style, document.head );
 }
 
 function create_main_fragment ( state, component ) {
-	var div;
+	var link, text, div, text_1, text_2;
 
-	var each_block_value = state.files;
+	var levelup = new template.components.LevelUp({
+		_root: component._root
+	});
 
-	var each_block_iterations = [];
+	var addressbar = new template.components.AddressBar({
+		_root: component._root
+	});
 
-	for ( var i = 0; i < each_block_value.length; i += 1 ) {
-		each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
-	}
-
-	return {
-		create: function () {
-			div = createElement( 'div' );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].create();
-			}
-			this.hydrate();
-		},
-
-		hydrate: function ( nodes ) {
-			encapsulateStyles( div );
-			div.className = "list";
-		},
-
-		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].mount( div, null );
-			}
-		},
-
-		update: function ( changed, state ) {
-			var each_block_value = state.files;
-
-			if ( 'files' in changed ) {
-				for ( var i = 0; i < each_block_value.length; i += 1 ) {
-					if ( each_block_iterations[i] ) {
-						each_block_iterations[i].update( changed, state, each_block_value, each_block_value[i], i );
-					} else {
-						each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
-						each_block_iterations[i].create();
-						each_block_iterations[i].mount( div, null );
-					}
-				}
-
-				for ( ; i < each_block_iterations.length; i += 1 ) {
-					each_block_iterations[i].unmount();
-					each_block_iterations[i].destroy();
-				}
-				each_block_iterations.length = each_block_value.length;
-			}
-		},
-
-		unmount: function () {
-			detachNode( div );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].unmount();
-			}
-		},
-
-		destroy: function () {
-			destroyEach( each_block_iterations, false, 0 );
-		}
-	};
-}
-
-function create_each_block ( state, each_block_value, file, file_index, component ) {
-
-	var file_1 = new template.components.File({
-		_root: component._root,
-		data: {
-			name: file.name,
-			path: file.path,
-			thumbnail: file.thumbnail,
-			isDirectory: file.isDirectory
-		}
+	var searchbar = new template.components.SearchBar({
+		_root: component._root
 	});
 
 	return {
 		create: function () {
-			file_1._fragment.create();
+			link = createElement( 'link' );
+			text = createText( "\n" );
+			div = createElement( 'div' );
+			levelup._fragment.create();
+			text_1 = createText( "\n  " );
+			addressbar._fragment.create();
+			text_2 = createText( "\n  " );
+			searchbar._fragment.create();
+			this.hydrate();
+		},
+
+		hydrate: function ( nodes ) {
+			encapsulateStyles( link );
+			link.rel = "stylesheet";
+			setAttribute( link, 'type', "text/css" );
+			link.href = "../../node_modules/js-autocomplete/auto-complete.css";
+			encapsulateStyles( div );
+			div.className = "header";
 		},
 
 		mount: function ( target, anchor ) {
-			file_1._fragment.mount( target, anchor );
-		},
-
-		update: function ( changed, state, each_block_value, file, file_index ) {
-			var file_1_changes = {};
-
-			if ( 'files' in changed ) file_1_changes.name = file.name;
-			if ( 'files' in changed ) file_1_changes.path = file.path;
-			if ( 'files' in changed ) file_1_changes.thumbnail = file.thumbnail;
-			if ( 'files' in changed ) file_1_changes.isDirectory = file.isDirectory;
-
-			if ( Object.keys( file_1_changes ).length ) file_1._set( file_1_changes );
+			insertNode( link, target, anchor );
+			insertNode( text, target, anchor );
+			insertNode( div, target, anchor );
+			levelup._fragment.mount( div, null );
+			appendNode( text_1, div );
+			addressbar._fragment.mount( div, null );
+			appendNode( text_2, div );
+			searchbar._fragment.mount( div, null );
 		},
 
 		unmount: function () {
-			file_1._fragment.unmount();
+			detachNode( link );
+			detachNode( text );
+			detachNode( div );
 		},
 
 		destroy: function () {
-			file_1.destroy( false );
+			levelup.destroy( false );
+			addressbar.destroy( false );
+			searchbar.destroy( false );
 		}
 	};
 }
 
-function List ( options ) {
+function Header ( options ) {
 	options = options || {};
-	this._state = assign( template.data(), options.data );
+	this._state = options.data || {};
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -157,7 +106,7 @@ function List ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-	if ( !document.getElementById( 'svelte-3579577842-style' ) ) add_css();
+	if ( !document.getElementById( 'svelte-2304861103-style' ) ) add_css();
 
 	if ( !options._root ) {
 		this._oncreate = [];
@@ -181,7 +130,7 @@ function List ( options ) {
 	}
 }
 
-assign( List.prototype, {
+assign( Header.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -189,15 +138,14 @@ assign( List.prototype, {
  	set: set
  });
 
-List.prototype._set = function _set ( newState ) {
+Header.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
 	dispatchObservers( this, this._observers.pre, newState, oldState );
-	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-List.prototype.teardown = List.prototype.destroy = function destroy ( detach ) {
+Header.prototype.teardown = Header.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
@@ -221,6 +169,10 @@ function appendNode(node, target) {
 	target.appendChild(node);
 }
 
+function createText(data) {
+	return document.createTextNode(data);
+}
+
 function insertNode(node, target, anchor) {
 	target.insertBefore(node, anchor);
 }
@@ -229,10 +181,8 @@ function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function destroyEach(iterations, detach, start) {
-	for (var i = start; i < iterations.length; i += 1) {
-		if (iterations[i]) iterations[i].destroy(detach);
-	}
+function callAll(fns) {
+	while (fns && fns.length) fns.pop()();
 }
 
 function assign(target) {
@@ -246,10 +196,6 @@ function assign(target) {
 	}
 
 	return target;
-}
-
-function callAll(fns) {
-	while (fns && fns.length) fns.pop()();
 }
 
 function get(key) {
@@ -338,6 +284,6 @@ function differs(a, b) {
 	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
-return List;
+return Header;
 
 })));

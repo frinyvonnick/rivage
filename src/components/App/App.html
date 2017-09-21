@@ -1,13 +1,16 @@
 <div>
+  <Header />
   <List />
 </div>
 
 <script>
-  import List from './List'
+  const { Header } = require('./Header')
+  const { List } = require('./List')
 
   export default {
     components: {
       List,
+      Header,
     },
   }
 </script>

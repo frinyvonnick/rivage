@@ -11,4 +11,4 @@ const mapDispatchToData = (dispatch, { path }) => {
   })
 }
 
-module.exports = connect(undefined, mapDispatchToData)(require('./File'))
+exports.File = connect(undefined, mapDispatchToData)(require('./File'))

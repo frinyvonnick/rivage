@@ -1,150 +1,104 @@
 (function ( global, factory ) {
 	typeof exports === 'object' && typeof module !== 'undefined' ? module.exports = factory() :
 	typeof define === 'function' && define.amd ? define(factory) :
-	(global.List = factory());
+	(global.AddressBar = factory());
 }(this, (function () { 'use strict';
 
-var template = (function () {
-  const { File } = require('./File')
+function recompute ( state, newState, oldState, isInitial ) {
+	if ( isInitial || ( 'availableAddresses' in newState && differs( state.availableAddresses, oldState.availableAddresses ) ) || ( 'address' in newState && differs( state.address, oldState.address ) ) ) {
+		state.addresses = newState.addresses = template.computed.addresses( state.availableAddresses, state.address );
+	}
+}
 
-  return {
-    data () {
-      return {
-        files: [],
+var template = (function () {
+const { noop } = require('lodash')
+const AutoComplete = require('js-autocomplete')
+
+return {
+  oncreate () {
+    const inputSelector = '#address'
+
+    this.autoComplete = new AutoComplete({
+      selector: inputSelector,
+      minChars: 1,
+      cache: false,
+      source: (term, response) => {
+        if(term.length < this._state.address.length) return response([])
+        response(this._state.addresses.filter(address => address.toLowerCase().includes(term.toLowerCase())))
       }
-    },
-    components: {
-      File,
+    })
+
+    document.querySelector(inputSelector).addEventListener('keyup', e => {
+      if (e.keyCode == 13) {
+        this._state.setAddress(e.target.value)
+      }
+    })
+  },
+  computed: {
+    addresses: (availableAddresses, address) => availableAddresses.map(a => address + a)
+  },
+  ondestroy () {
+    this.autoComplete.destroy()
+  },
+  data () {
+    return {
+      address: '',
+      availableAddresses: [],
+      setAddress: noop,
     }
-  }
+  },
+}
 }());
 
 function encapsulateStyles ( node ) {
-	setAttribute( node, 'svelte-3579577842', '' );
+	setAttribute( node, 'svelte-939388320', '' );
 }
 
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-3579577842-style';
-	style.textContent = "[svelte-3579577842].list,[svelte-3579577842] .list{padding:10px 15px;width:100%;display:flex;flex-wrap:wrap}";
+	style.id = 'svelte-939388320-style';
+	style.textContent = "[svelte-939388320]#address,[svelte-939388320] #address{width:100%;padding:10px 15px}";
 	appendNode( style, document.head );
 }
 
 function create_main_fragment ( state, component ) {
-	var div;
-
-	var each_block_value = state.files;
-
-	var each_block_iterations = [];
-
-	for ( var i = 0; i < each_block_value.length; i += 1 ) {
-		each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
-	}
+	var input, input_value_value;
 
 	return {
 		create: function () {
-			div = createElement( 'div' );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].create();
-			}
+			input = createElement( 'input' );
 			this.hydrate();
 		},
 
 		hydrate: function ( nodes ) {
-			encapsulateStyles( div );
-			div.className = "list";
+			encapsulateStyles( input );
+			input.id = "address";
+			input.type = "text";
+			input.value = input_value_value = state.address;
 		},
 
 		mount: function ( target, anchor ) {
-			insertNode( div, target, anchor );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].mount( div, null );
-			}
+			insertNode( input, target, anchor );
 		},
 
 		update: function ( changed, state ) {
-			var each_block_value = state.files;
-
-			if ( 'files' in changed ) {
-				for ( var i = 0; i < each_block_value.length; i += 1 ) {
-					if ( each_block_iterations[i] ) {
-						each_block_iterations[i].update( changed, state, each_block_value, each_block_value[i], i );
-					} else {
-						each_block_iterations[i] = create_each_block( state, each_block_value, each_block_value[i], i, component );
-						each_block_iterations[i].create();
-						each_block_iterations[i].mount( div, null );
-					}
-				}
-
-				for ( ; i < each_block_iterations.length; i += 1 ) {
-					each_block_iterations[i].unmount();
-					each_block_iterations[i].destroy();
-				}
-				each_block_iterations.length = each_block_value.length;
+			if ( input_value_value !== ( input_value_value = state.address ) ) {
+				input.value = input_value_value;
 			}
 		},
 
 		unmount: function () {
-			detachNode( div );
-
-			for ( var i = 0; i < each_block_iterations.length; i += 1 ) {
-				each_block_iterations[i].unmount();
-			}
+			detachNode( input );
 		},
 
-		destroy: function () {
-			destroyEach( each_block_iterations, false, 0 );
-		}
+		destroy: noop
 	};
 }
 
-function create_each_block ( state, each_block_value, file, file_index, component ) {
-
-	var file_1 = new template.components.File({
-		_root: component._root,
-		data: {
-			name: file.name,
-			path: file.path,
-			thumbnail: file.thumbnail,
-			isDirectory: file.isDirectory
-		}
-	});
-
-	return {
-		create: function () {
-			file_1._fragment.create();
-		},
-
-		mount: function ( target, anchor ) {
-			file_1._fragment.mount( target, anchor );
-		},
-
-		update: function ( changed, state, each_block_value, file, file_index ) {
-			var file_1_changes = {};
-
-			if ( 'files' in changed ) file_1_changes.name = file.name;
-			if ( 'files' in changed ) file_1_changes.path = file.path;
-			if ( 'files' in changed ) file_1_changes.thumbnail = file.thumbnail;
-			if ( 'files' in changed ) file_1_changes.isDirectory = file.isDirectory;
-
-			if ( Object.keys( file_1_changes ).length ) file_1._set( file_1_changes );
-		},
-
-		unmount: function () {
-			file_1._fragment.unmount();
-		},
-
-		destroy: function () {
-			file_1.destroy( false );
-		}
-	};
-}
-
-function List ( options ) {
+function AddressBar ( options ) {
 	options = options || {};
 	this._state = assign( template.data(), options.data );
+	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -157,13 +111,15 @@ function List ( options ) {
 	this._yield = options._yield;
 
 	this._destroyed = false;
-	if ( !document.getElementById( 'svelte-3579577842-style' ) ) add_css();
+	if ( !document.getElementById( 'svelte-939388320-style' ) ) add_css();
+
+	var oncreate = template.oncreate.bind( this );
 
 	if ( !options._root ) {
-		this._oncreate = [];
-		this._beforecreate = [];
-		this._aftercreate = [];
-	}
+		this._oncreate = [oncreate];
+	} else {
+	 	this._root._oncreate.push(oncreate);
+	 }
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -173,15 +129,11 @@ function List ( options ) {
 	}
 
 	if ( !options._root ) {
-		this._lock = true;
-		callAll(this._beforecreate);
 		callAll(this._oncreate);
-		callAll(this._aftercreate);
-		this._lock = false;
 	}
 }
 
-assign( List.prototype, {
+assign( AddressBar.prototype, {
  	get: get,
  	fire: fire,
  	observe: observe,
@@ -189,17 +141,19 @@ assign( List.prototype, {
  	set: set
  });
 
-List.prototype._set = function _set ( newState ) {
+AddressBar.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
+	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
-List.prototype.teardown = List.prototype.destroy = function destroy ( detach ) {
+AddressBar.prototype.teardown = AddressBar.prototype.destroy = function destroy ( detach ) {
 	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
+	template.ondestroy.call( this );
 
 	if ( detach !== false ) this._fragment.unmount();
 	this._fragment.destroy();
@@ -208,6 +162,10 @@ List.prototype.teardown = List.prototype.destroy = function destroy ( detach ) {
 	this._state = {};
 	this._destroyed = true;
 };
+
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
 
 function setAttribute(node, attribute, value) {
 	node.setAttribute(attribute, value);
@@ -229,11 +187,7 @@ function detachNode(node) {
 	node.parentNode.removeChild(node);
 }
 
-function destroyEach(iterations, detach, start) {
-	for (var i = start; i < iterations.length; i += 1) {
-		if (iterations[i]) iterations[i].destroy(detach);
-	}
-}
+function noop() {}
 
 function assign(target) {
 	var k,
@@ -334,10 +288,6 @@ function dispatchObservers(component, group, newState, oldState) {
 	}
 }
 
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
-}
-
-return List;
+return AddressBar;
 
 })));

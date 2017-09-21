@@ -3,7 +3,9 @@
 	<head>
 		<meta charset="utf-8">
 		<title>Rivage</title>
+		<link href="https://fonts.googleapis.com/css?family=Roboto|Roboto+Condensed" rel="stylesheet">
 		<link rel="stylesheet" href="../assets/css/index.css">
+		<link rel="stylesheet" href="../../node_modules/font-awesome/css/font-awesome.min.css">
 	</head>
 	<body>
 	</body>
@@ -11,8 +13,12 @@
 		// Let use path aliases like src/main-process/windows instead of ../main-process/windows
 		require('module-alias/register')
 		const { createStore } = require('state/store')
+		const { applyMiddleware } = require('redux')
+		const logger = require('redux-logger')
 
-		const store = createStore([])
+		const store = createStore([
+			applyMiddleware(logger),
+		])
 
 		store.subscribe(() => {
 			console.log('state', store.getState())

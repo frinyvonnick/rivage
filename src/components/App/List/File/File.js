@@ -4,8 +4,15 @@
 	(global.File = factory());
 }(this, (function () { 'use strict';
 
+function recompute ( state, newState, oldState, isInitial ) {
+	if ( isInitial || ( 'isDirectory' in newState && differs( state.isDirectory, oldState.isDirectory ) ) ) {
+		state.className = newState.className = template.computed.className( state.isDirectory );
+	}
+}
+
 var template = (function () {
   const { noop } = require('lodash')
+  const classNames = require('classnames')
 
   return {
     data () {
@@ -18,6 +25,9 @@ var template = (function () {
         openItem: noop,
       }
     },
+    computed: {
+      className: isDirectory => classNames('file', { 'directory' :isDirectory })
+    },
     methods: {
       click: function () {
         const { isDirectory, setAddress, openItem, path } = this._state
@@ -27,20 +37,24 @@ var template = (function () {
         } else {
           openItem()
         }
-      }
+      },
     }
   }
 }());
 
+function encapsulateStyles ( node ) {
+	setAttribute( node, 'svelte-3076271833', '' );
+}
+
 function add_css () {
 	var style = createElement( 'style' );
-	style.id = 'svelte-3656429022-style';
-	style.textContent = "\n  [svelte-3656429022].file, [svelte-3656429022] .file {\n    padding: 10px;\n    width: 100px;\n    min-width: 100px;\n    display: flex;\n    flex-direction: column;\n    align-items: center;\n  }\n  [svelte-3656429022].file p, [svelte-3656429022] .file p {\n    margin-bottom: 0;\n    margin-top: 5px;\n    width: 100%;\n    text-align: center;\n    white-space: nowrap;\n    overflow: hidden;\n    text-overflow: ellipsis;\n  }\n";
+	style.id = 'svelte-3076271833-style';
+	style.textContent = "[svelte-3076271833].file,[svelte-3076271833] .file{padding:10px;width:12.5%;min-width:100px;display:flex;flex-direction:column;align-items:center}[svelte-3076271833].file p,[svelte-3076271833] .file p{margin-bottom:0;margin-top:5px;width:100%;text-align:center;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}[svelte-3076271833].directory svg,[svelte-3076271833] .directory svg{fill:yellow}";
 	appendNode( style, document.head );
 }
 
 function create_main_fragment ( state, component ) {
-	var div, img, img_src_value, text, p, p_title_value, text_1_value, text_1;
+	var div, div_class_value, img, img_src_value, text, p, p_title_value, text_1_value, text_1;
 
 	function click_handler ( event ) {
 		component.click();
@@ -57,8 +71,8 @@ function create_main_fragment ( state, component ) {
 		},
 
 		hydrate: function ( nodes ) {
-			setAttribute( div, 'svelte-3656429022', '' );
-			div.className = "file";
+			encapsulateStyles( div );
+			div.className = div_class_value = state.className;
 			img.src = img_src_value = state.thumbnail;
 			img.height = "80";
 			addListener( img, 'click', click_handler );
@@ -74,6 +88,10 @@ function create_main_fragment ( state, component ) {
 		},
 
 		update: function ( changed, state ) {
+			if ( div_class_value !== ( div_class_value = state.className ) ) {
+				div.className = div_class_value;
+			}
+
 			if ( img_src_value !== ( img_src_value = state.thumbnail ) ) {
 				img.src = img_src_value;
 			}
@@ -100,6 +118,7 @@ function create_main_fragment ( state, component ) {
 function File ( options ) {
 	options = options || {};
 	this._state = assign( template.data(), options.data );
+	recompute( this._state, this._state, {}, true );
 
 	this._observers = {
 		pre: Object.create( null ),
@@ -111,8 +130,8 @@ function File ( options ) {
 	this._root = options._root || this;
 	this._yield = options._yield;
 
-	this._torndown = false;
-	if ( !document.getElementById( 'svelte-3656429022-style' ) ) add_css();
+	this._destroyed = false;
+	if ( !document.getElementById( 'svelte-3076271833-style' ) ) add_css();
 
 	this._fragment = create_main_fragment( this._state, this );
 
@@ -133,12 +152,14 @@ assign( File.prototype, template.methods, {
 File.prototype._set = function _set ( newState ) {
 	var oldState = this._state;
 	this._state = assign( {}, oldState, newState );
+	recompute( this._state, newState, oldState, false )
 	dispatchObservers( this, this._observers.pre, newState, oldState );
 	this._fragment.update( newState, this._state );
 	dispatchObservers( this, this._observers.post, newState, oldState );
 };
 
 File.prototype.teardown = File.prototype.destroy = function destroy ( detach ) {
+	if ( this._destroyed ) return;
 	this.fire( 'destroy' );
 
 	if ( detach !== false ) this._fragment.unmount();
@@ -146,8 +167,16 @@ File.prototype.teardown = File.prototype.destroy = function destroy ( detach ) {
 	this._fragment = null;
 
 	this._state = {};
-	this._torndown = true;
+	this._destroyed = true;
 };
+
+function differs(a, b) {
+	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
+}
+
+function setAttribute(node, attribute, value) {
+	node.setAttribute(attribute, value);
+}
 
 function createElement(name) {
 	return document.createElement(name);
@@ -159,10 +188,6 @@ function appendNode(node, target) {
 
 function createText(data) {
 	return document.createTextNode(data);
-}
-
-function setAttribute(node, attribute, value) {
-	node.setAttribute(attribute, value);
 }
 
 function addListener(node, event, handler) {
@@ -245,7 +270,12 @@ function on(eventName, handler) {
 
 function set(newState) {
 	this._set(assign({}, newState));
+	if (this._root._lock) return;
+	this._root._lock = true;
+	callAll(this._root._beforecreate);
 	callAll(this._root._oncreate);
+	callAll(this._root._aftercreate);
+	this._root._lock = false;
 }
 
 function dispatchObservers(component, group, newState, oldState) {
@@ -273,10 +303,6 @@ function dispatchObservers(component, group, newState, oldState) {
 
 function callAll(fns) {
 	while (fns && fns.length) fns.pop()();
-}
-
-function differs(a, b) {
-	return a !== b || ((a && typeof a === 'object') || typeof a === 'function');
 }
 
 return File;

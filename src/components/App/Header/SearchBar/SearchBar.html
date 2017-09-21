@@ -1,0 +1,31 @@
+<input
+  id="search"
+  type="text"
+  value="{{search}}"
+  on:keyup="keyup(event)"
+  placeholder="Rechercher un fichier 🔎"
+/>
+
+<script>
+  export default {
+    data() {
+      return {
+        search: '',
+      }
+    },
+    methods: {
+      keyup: function (e) {
+        if (e.key === "Enter") {
+          this._state.setSearch(e.target.value)
+        }
+      },
+    },
+  }
+</script>
+
+<style>
+  #search {
+    width: 250px;
+    padding: 10px 15px;
+  }
+</style>

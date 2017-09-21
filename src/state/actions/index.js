@@ -18,3 +18,21 @@ exports.openItem = fullPath => ({
   type: OPEN_ITEM,
   fullPath,
 })
+
+const GO_LEVEL_UP = 'GO_LEVEL_UP'
+exports.GO_LEVEL_UP = GO_LEVEL_UP
+exports.goLevelUp = () => ({ type: GO_LEVEL_UP })
+
+const SET_SEARCH = 'SET_SEARCH'
+exports.SET_SEARCH = SET_SEARCH
+exports.setSearch = search => ({
+  type: SET_SEARCH,
+  search,
+})
+
+const SET_IS_SEARCHING = 'SET_IS_SEARCHING'
+exports.SET_IS_SEARCHING = SET_IS_SEARCHING
+exports.setIsSearching = isSearching => ({
+  type: SET_IS_SEARCHING,
+  isSearching,
+})

@@ -1,7 +1,4 @@
-const {
-  noop,
-  cloneDeep,
-} = require('lodash')
+const { noop } = require('lodash')
 
 const shallowEqualObjects = require('shallow-equal/objects')
 const { getStore } = require('state/store')
@@ -17,9 +14,7 @@ exports.connect = (mapStateToData = noop, mapDispatchToData = noop) => Component
     return Object.assign({}, data, stateToData, dispatchToData)
   }
 
-  return function(pOptions) {
-    const options = cloneDeep(pOptions)
-
+  return function(options) {
     const nextData = getNextData(store.getState(), options.data, store.dispatch)
     let data = nextData
     const newOptions = Object.assign({}, options, { data })
@@ -27,7 +22,6 @@ exports.connect = (mapStateToData = noop, mapDispatchToData = noop) => Component
     const instance = new Component(newOptions)
 
     let justUpdate = false
-    let isDestroying = false
 
     const updateIfNeccessary = () => {
       const nextData = getNextData(store.getState(), instance._state, store.dispatch)
@@ -38,7 +32,7 @@ exports.connect = (mapStateToData = noop, mapDispatchToData = noop) => Component
     }
 
     const unsubscribe = store.subscribe(() => {
-      if (isDestroying) return
+      if (instance._destroyed) return
       justUpdate = true
 
       updateIfNeccessary()
@@ -55,7 +49,6 @@ exports.connect = (mapStateToData = noop, mapDispatchToData = noop) => Component
     })
 
     instance.on('destroy', () => {
-      isDestroying = true
       unsubscribe()
       observers.forEach(o => o.cancel())
     })

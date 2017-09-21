@@ -10,15 +10,12 @@ let store = null
 // Note: passing enhancer as the last argument to createStore requires redux@>=3.1.0
 exports.createRendererStore = (middlewares) => {
   if (store !== null) return store
-
-  const enhancer = compose(
+  store = createStore(reducer, {}, compose(
     applyMiddleware.apply({}, middlewares),
 
     electronEnhancer({ dispatchProxy: a => store.dispatch(a) }),
     require('remote-redux-devtools').default()
-  )
-
-  store = createStore(reducer, {}, enhancer)
+  ))
   return store
 }
 

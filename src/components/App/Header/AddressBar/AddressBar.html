@@ -1,0 +1,48 @@
+<input id="address" type="text" value="{{address}}"/>
+
+<script>
+const { noop } = require('lodash')
+const AutoComplete = require('js-autocomplete')
+
+export default {
+  oncreate () {
+    const inputSelector = '#address'
+
+    this.autoComplete = new AutoComplete({
+      selector: inputSelector,
+      minChars: 1,
+      cache: false,
+      source: (term, response) => {
+        if(term.length < this._state.address.length) return response([])
+        response(this._state.addresses.filter(address => address.toLowerCase().includes(term.toLowerCase())))
+      }
+    })
+
+    document.querySelector(inputSelector).addEventListener('keyup', e => {
+      if (e.keyCode == 13) {
+        this._state.setAddress(e.target.value)
+      }
+    })
+  },
+  computed: {
+    addresses: (availableAddresses, address) => availableAddresses.map(a => address + a)
+  },
+  ondestroy () {
+    this.autoComplete.destroy()
+  },
+  data () {
+    return {
+      address: '',
+      availableAddresses: [],
+      setAddress: noop,
+    }
+  },
+}
+</script>
+
+<style>
+  #address {
+    width: 100%;
+    padding: 10px 15px;
+  }
+</style>

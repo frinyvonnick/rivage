@@ -4,4 +4,4 @@ const mapStateToData = ({ files }) => ({
   files,
 })
 
-module.exports = connect(mapStateToData)(require('./List'))
+exports.List = connect(mapStateToData)(require('./List'))
